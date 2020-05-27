@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ./gw.yaml
+- ./nr-tracing.yaml
+- ./ns-nr-app.yaml
+- ./nr-app-a.yaml
+- ./nr-app-b.yaml
+
+secretGenerator:
+- name: nr-tracing-env
+  namespace: istio-system
+  envs:
+  - nr-tracing.env
+- name: nr-app-env
+  namespace: nr-app
+  envs:
+  - nr-app.env

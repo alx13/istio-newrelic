@@ -1,0 +1,75 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nr-app-a
+  namespace: nr-app
+  labels:
+    app: nr-app-a
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nr-app-a
+  template:
+    metadata:
+      labels:
+        app: nr-app-a
+    spec:
+      containers:
+      - name: nr-app
+        image: alx13/nr-app:1.0.0
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        resources:
+          requests:
+            cpu: "64m"
+            memory: 64Mi
+          limits:
+            memory: 64Mi
+        env:
+        - name: NAME
+          value: "A"
+        - name: PORT
+          value: "8080"
+        - name: UPSTREAM_URL
+          value: "http://b.nr-app.svc.cluster.local"
+        envFrom:
+        - secretRef:
+            name: nr-app-env
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: a
+  namespace: nr-app
+  labels:
+    app: nr-app-a
+spec:
+  selector:
+    app: nr-app-a
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: nr-app-a
+  namespace: nr-app
+spec:
+  gateways:
+  - istio-system/nr-app
+  hosts:
+  - "*"
+  http:
+  - name: "nr-app-a"
+    route:
+    - destination:
+        host: a.nr-app.svc.cluster.local

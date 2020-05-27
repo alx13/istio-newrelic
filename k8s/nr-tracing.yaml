@@ -1,0 +1,60 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nr-tracing
+  namespace: istio-system
+  labels:
+    app: nr-tracing
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nr-tracing
+  template:
+    metadata:
+      labels:
+        app: nr-tracing
+    spec:
+      containers:
+      - name: nr-tracing
+        image: nr-tracing
+        # this is because we are testing in docker-desktop
+        imagePullPolicy: Never
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http-tracing
+          successThreshold: 1
+          failureThreshold: 2
+          initialDelaySeconds: 5
+          periodSeconds: 30
+        ports:
+        - name: http-tracing
+          containerPort: 8080
+          protocol: TCP
+        resources:
+          requests:
+            cpu: "128m"
+            memory: 128Mi
+          limits:
+            memory: 128Mi
+        envFrom:
+        - secretRef:
+            name: nr-tracing-env
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zipkin
+  namespace: istio-system
+  labels:
+    app: nr-tracing
+spec:
+  selector:
+    app: nr-tracing
+  ports:
+  - name: http
+    port: 9411
+    targetPort: http-tracing

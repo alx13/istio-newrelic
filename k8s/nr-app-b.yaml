@@ -1,0 +1,56 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nr-app-b
+  namespace: nr-app
+  labels:
+    app: nr-app-b
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nr-app-b
+  template:
+    metadata:
+      labels:
+        app: nr-app-b
+    spec:
+      containers:
+      - name: nr-app
+        image: alx13/nr-app:1.0.0
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        resources:
+          requests:
+            cpu: "64m"
+            memory: 64Mi
+          limits:
+            memory: 64Mi
+        env:
+        - name: NAME
+          value: "B"
+        - name: PORT
+          value: "8080"
+        envFrom:
+        - secretRef:
+            name: nr-app-env
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: b
+  namespace: nr-app
+  labels:
+    app: nr-app-b
+spec:
+  selector:
+    app: nr-app-b
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
