@@ -1,0 +1,44 @@
+Client->Ingress: GET /api\nHost: localhost
+
+activate Ingress #cyan
+note over Ingress: B3\ntraceA\nspan 0
+Ingress->A[istio-proxy]: GET /api\nX-B3-Traceid: A\nX-B3-Spanid: 0\n
+
+activate A[istio-proxy] #cyan
+note over A[istio-proxy]: B3\ntrace A\nspan 1
+A[istio-proxy]->A[nr-app]: GET /api\nX-B3-Traceid: A\nX-B3-Parentspanid: 0\nX-B3-Spanid: 1
+
+activate A[nr-app] #orange
+note over A[nr-app]: W3C\ntrace B\nspan 0
+A[nr-app]->A[istio-proxy]: GET /api\nX-B3-Traceid: A\nX-B3-Parentspanid: 0\nX-B3-Spanid: 1\nTraceparent: 00-B-1
+activate A[nr-app] #orange
+activate A[istio-proxy] #pink
+note over A[nr-app]: W3C\ntrace B\nspan 1
+note over A[istio-proxy]: B3\ntrace C\nspan0
+
+A[istio-proxy]->B[istio-proxy]: GET /api\nX-B3-Traceid: C\nX-B3-Spanid: 0\nTraceparent: 00-B-1
+
+activate B[istio-proxy] #pink
+note over B[istio-proxy]: B3\ntrace C\nspan 1
+B[istio-proxy]->B[nr-app]: GET /api\nX-B3-Traceid: C\nX-B3-Parentspanid: 0\nX-B3-Spanid: 1\nTraceparent: 00-B-1
+
+activate B[nr-app] #orange
+note over B[nr-app]: W3C\ntraceB\nspan 2
+
+B[nr-app]-->B[istio-proxy]: [terminating upstream got /api/]
+deactivate B[nr-app]
+
+B[istio-proxy]-->A[istio-proxy]: [terminating upstream got /api/]
+deactivate B[istio-proxy]
+A[istio-proxy]-->A[nr-app]: [terminating upstream got /api/]
+deactivate A[istio-proxy]
+deactivate A[nr-app]
+
+
+A[nr-app]-->A[istio-proxy]: [terminating upstream got /api/]
+deactivate A[nr-app]
+A[istio-proxy]-->Ingress: [terminating upstream got /api/]
+deactivate A[istio-proxy]
+
+Ingress-->Client: [terminating upstream got /api/]
+deactivate Ingress
