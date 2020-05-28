@@ -1,6 +1,8 @@
 # istio-newrelic
 Hacking istio to have proper distributed traces in NewRelic
 
+**Disclaimer: Code in this solution is not production ready**
+
 
 ## problem statement
 If you are using [Istio](https://istio.io/) in your Kubernetes cluster
@@ -186,13 +188,48 @@ But we don't have istio-ingress here. What is actually happening now — we have
 
 ![3 forests](./images/sd-no-envoy.png)
 
+Why?
+
+- istio starts one forest with ingress-gateway
+- it comes to application `A` — and it lost traces, because they are in B3 format
+- application `A` starts a new forest — with NewRelic and W3C headers
+- application `A` calls application `B` with W3C headers (second forest)
+- this request is intercepted by istio-proxy which adds third forest — first one is lost by app
 
 
+### so we are lost?
+Actually [Envoy](https://www.envoyproxy.io/) supports W3C headers with [OpenCensus](https://opencensus.io/) adapter: https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/trace/v3/opencensus.proto.html
+
+And even more, Istio is actually using OpenCensus but only to work with StackDriver:
+https://github.com/istio/istio/blob/1.6.0/tools/packaging/common/envoy_bootstrap_v2.json#L568
+
+So, let's hack this file a little bit and put it inside our docker image: [istio/envoy_bootstrap_v2.json]
+
+Next, we need to alter profile a little to use our own images instead for officail istio.
+Anyway, you are always syncing images to private registry before using them in production?
+
+```bash
+cd istio
+./install-hack.sh
+```
+
+We will need to restart our applications as well to get new proxy image and config.
+
+```bash
+kubectl -n nr-app rollout restart deploy/nr-app-a
+kubectl -n nr-app rollout restart deploy/nr-app-b
+```
+
+Let's test again:
+```bash
+curl localhost/api/ --verbose
+```
+
+And:
+![envoy](images/envoy.png)
 
 
-
-
-
-
-
-
+# sources
+- https://discuss.istio.io/t/configurable-trace-header-proposal/4085
+- https://github.com/istio/istio/issues/23960
+- https://github.com/istio/istio/issues/16703
