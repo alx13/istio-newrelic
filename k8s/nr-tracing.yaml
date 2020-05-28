@@ -18,9 +18,9 @@ spec:
     spec:
       containers:
       - name: nr-tracing
-        image: nr-tracing
+        image: alx13/nr-tracing:1.0.0
         # this is because we are testing in docker-desktop
-        imagePullPolicy: Never
+        imagePullPolicy: Always
         readinessProbe:
           httpGet:
             path: /healthz
@@ -39,6 +39,9 @@ spec:
             memory: 128Mi
           limits:
             memory: 128Mi
+        env:
+        - name: NEW_RELIC_TRACE_URL
+          value: https://trace-api.eu.newrelic.com/trace/v1
         envFrom:
         - secretRef:
             name: nr-tracing-env
