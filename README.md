@@ -28,7 +28,7 @@ Istio — v1.6.0.
 
 
 Fist, let's install istio from a little bit modified, but still off-the-shelf
-profile ([istio] directory):
+profile ([istio](istio) directory):
 
 ```bash
 cd istio
@@ -56,12 +56,12 @@ That's because you need to add some headers before sending data to NewRelic [tra
 
 ### nr-tracing proxy
 So we will just write a little go application that will act like a jaeger and proxy
-data to NewRelic. Code is in [nr-tracing] directory.
+data to NewRelic. Code is in [nr-tracing](nr-tracing) directory.
 
 It will read following environmental variables:
 
 - PORT — port to listen, default 8080
-- NEW_RELIC_API_KEY — Your [Insert API key](https://docs.newrelic.com/docs/insights/insights-data-sources/custom-data/send-custom-events-event-api#)
+- NEW_RELIC_API_KEY — your [Insert API key](https://docs.newrelic.com/docs/insights/insights-data-sources/custom-data/send-custom-events-event-api#)
 - NEW_RELIC_TRACE_URL — `https://trace-api.newrelic.com/trace/v1` if you are using US NewRelic data centers and `https://trace-api.eu.newrelic.com/trace/v1` in case of EU data centers
 
 Next, build and push docker image for it. Please adjust script to your docker registry.
@@ -69,7 +69,7 @@ Next, build and push docker image for it. Please adjust script to your docker re
 
 ### nr-app
 Let's build some simple web service and instrument it with NewRelic agent.
-Code is in [nr-app] directory.
+Code is in [nr-app](nr-app) directory.
 
 The service will listen to `GET /api/*` and:
 - if no `UPSTREAM_URL` env variable configured — response with `[terminating upstream got <path>]` text/plain response
@@ -86,7 +86,7 @@ es.End()
 Again, let's push this image to some docker registry.
 
 ### running in k8s
-In [k8s] directory there are kubernetes and [kustomize](https://kustomize.io/) manifests.
+In [k8s](k8s) directory there are kubernetes and [kustomize](https://kustomize.io/) manifests.
 ```
 gw.yaml         - istio ingress gateway configuration with "*" match
 nr-app-a.yaml   — application with upstream configured to http://b.svc.cluster.local
